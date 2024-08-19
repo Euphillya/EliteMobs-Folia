@@ -1,0 +1,3 @@
+[submodule "EliteMobs"]
+	path = EliteMobs
+	url = https://github.com/MagmaGuy/EliteMobs

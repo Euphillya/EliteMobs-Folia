@@ -1,0 +1,487 @@
+From 3a5b61afdd21d9f01ad4f98b095f6a1a7d124625 Mon Sep 17 00:00:00 2001
+From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
+Date: Mon, 19 Aug 2024 14:21:44 +0200
+Subject: [PATCH 7/9] Teleport to TeleportAsync
+
+---
+ .../elitemobs/api/PlayerTeleportEvent.java    |  2 +-
+ .../combatsystem/displays/PopupDisplay.java   |  4 ++--
+ .../elitemobs/dungeons/WorldPackage.java      |  2 +-
+ .../dungeons/utility/DungeonUtils.java        |  2 +-
+ .../elitemobs/explosionregen/Explosion.java   |  2 +-
+ .../instanced/InstancePlayerManager.java      | 24 +++++++++----------
+ .../elitemobs/instanced/MatchInstance.java    | 12 +++++-----
+ .../SoulbindEnchantment.java                  |  4 ++--
+ .../elitemobs/npcs/chatter/NPCChatBubble.java |  2 +-
+ .../npcs/chatter/NPCProximitySensor.java      |  4 ++--
+ .../elitemobs/pathfinding/Navigation.java     |  2 +-
+ .../magmaguy/elitemobs/powers/ArrowRain.java  |  2 +-
+ .../magmaguy/elitemobs/powers/BulletHell.java |  4 ++--
+ .../elitemobs/powers/FireworksBarrage.java    |  4 ++--
+ .../elitemobs/powers/MeteorShower.java        |  2 +-
+ .../magmaguy/elitemobs/powers/ShieldWall.java |  2 +-
+ .../magmaguy/elitemobs/powers/SpiritWalk.java | 12 +++++-----
+ .../powers/scripts/ScriptAction.java          |  2 +-
+ .../powerstances/VisualItemProcessor.java     |  4 ++--
+ .../elitemobs/utils/DialogArmorStand.java     |  4 ++--
+ .../elitemobs/wormhole/WormholeTask.java      |  2 +-
+ 21 files changed, 49 insertions(+), 49 deletions(-)
+
+diff --git a/src/main/java/com/magmaguy/elitemobs/api/PlayerTeleportEvent.java b/src/main/java/com/magmaguy/elitemobs/api/PlayerTeleportEvent.java
+index 05177dd2..d00cefbf 100644
+--- a/src/main/java/com/magmaguy/elitemobs/api/PlayerTeleportEvent.java
++++ b/src/main/java/com/magmaguy/elitemobs/api/PlayerTeleportEvent.java
+@@ -67,7 +67,7 @@ public class PlayerTeleportEvent extends Event implements Cancellable {
+         if (!EliteMobsWorld.isEliteMobsWorld(player.getLocation().getWorld().getUID()))
+             PlayerData.setBackTeleportLocation(player, originalLocation);
+ 
+-        player.teleport(destination);
++        player.teleportAsync(destination);
+     }
+ 
+     public static class PlayerTeleportEventExecutor implements Listener {
+diff --git a/src/main/java/com/magmaguy/elitemobs/combatsystem/displays/PopupDisplay.java b/src/main/java/com/magmaguy/elitemobs/combatsystem/displays/PopupDisplay.java
+index f1cc7644..cb9ac031 100644
+--- a/src/main/java/com/magmaguy/elitemobs/combatsystem/displays/PopupDisplay.java
++++ b/src/main/java/com/magmaguy/elitemobs/combatsystem/displays/PopupDisplay.java
+@@ -107,7 +107,7 @@ public class PopupDisplay implements Listener {
+                     return;
+                 }
+                 try {
+-                    armorStand.teleport(getResistLocation(player, eliteEntity));
++                    armorStand.teleportAsync(getResistLocation(player, eliteEntity));
+                 } catch (Exception e) {
+                     //Sometimes, very rarely, x is not finite. Doesn't really matter.
+                 }
+@@ -143,7 +143,7 @@ public class PopupDisplay implements Listener {
+                     return;
+                 }
+                 for (TextDisplay armorStand : textDisplays)
+-                    armorStand.teleport(armorStand.getLocation().add(eliteEntity.getLocation().add(new Vector(0, 0, 0))
++                    armorStand.teleportAsync(armorStand.getLocation().add(eliteEntity.getLocation().add(new Vector(0, 0, 0))
+                             .subtract(armorStand.getLocation()).toVector().normalize().multiply(.4)));
+                 counter++;
+             }
+diff --git a/src/main/java/com/magmaguy/elitemobs/dungeons/WorldPackage.java b/src/main/java/com/magmaguy/elitemobs/dungeons/WorldPackage.java
+index dac8d1c8..d21a939a 100644
+--- a/src/main/java/com/magmaguy/elitemobs/dungeons/WorldPackage.java
++++ b/src/main/java/com/magmaguy/elitemobs/dungeons/WorldPackage.java
+@@ -67,7 +67,7 @@ public class WorldPackage extends EMPackage {
+         if (!super.install(player)) return false;
+         DungeonUtils.loadWorld(this);
+         dungeonPackagerConfigFields.installWorld();
+-        player.teleport(dungeonPackagerConfigFields.getTeleportLocation());
++        player.teleportAsync(dungeonPackagerConfigFields.getTeleportLocation());
+         world = dungeonPackagerConfigFields.getTeleportLocation().getWorld();
+         if (dungeonPackagerConfigFields.getSong() != null)
+             new CustomMusic(dungeonPackagerConfigFields.getSong(), dungeonPackagerConfigFields, world);
+diff --git a/src/main/java/com/magmaguy/elitemobs/dungeons/utility/DungeonUtils.java b/src/main/java/com/magmaguy/elitemobs/dungeons/utility/DungeonUtils.java
+index 65069d56..9a1901fc 100644
+--- a/src/main/java/com/magmaguy/elitemobs/dungeons/utility/DungeonUtils.java
++++ b/src/main/java/com/magmaguy/elitemobs/dungeons/utility/DungeonUtils.java
+@@ -55,7 +55,7 @@ public class DungeonUtils {
+                 if (defaultWorld == null)
+                     return false;
+                 else
+-                    player.teleport(defaultWorld.getSpawnLocation());
++                    player.teleportAsync(defaultWorld.getSpawnLocation());
+         Bukkit.unloadWorld(worldPackage.getWorld(), false);
+         if (worldPackage instanceof WorldDungeonPackage && ((WorldDungeonPackage) worldPackage).getWormholeWorld() != null)
+             Bukkit.unloadWorld(((WorldDungeonPackage) worldPackage).getWormholeWorld(), false);
+diff --git a/src/main/java/com/magmaguy/elitemobs/explosionregen/Explosion.java b/src/main/java/com/magmaguy/elitemobs/explosionregen/Explosion.java
+index 7c4aeae8..126472ea 100644
+--- a/src/main/java/com/magmaguy/elitemobs/explosionregen/Explosion.java
++++ b/src/main/java/com/magmaguy/elitemobs/explosionregen/Explosion.java
+@@ -287,7 +287,7 @@ public class Explosion {
+ 
+         for (Entity entity : blockState.getWorld().getNearbyEntities(new BoundingBox(blockState.getX(), blockState.getY(), blockState.getZ(),
+                 blockState.getX() + 1, blockState.getY() + 1, blockState.getZ() + 1)))
+-            entity.teleport(entity.getLocation().clone().add(new Vector(0, 1, 0)));
++            entity.teleportAsync(entity.getLocation().clone().add(new Vector(0, 1, 0)));
+ 
+         blockState.setBlockData(blockState.getBlockData());
+ 
+diff --git a/src/main/java/com/magmaguy/elitemobs/instanced/InstancePlayerManager.java b/src/main/java/com/magmaguy/elitemobs/instanced/InstancePlayerManager.java
+index 8012707a..06dfee67 100644
+--- a/src/main/java/com/magmaguy/elitemobs/instanced/InstancePlayerManager.java
++++ b/src/main/java/com/magmaguy/elitemobs/instanced/InstancePlayerManager.java
+@@ -60,9 +60,9 @@ public class InstancePlayerManager {
+                 //Teleport the player to the correct location
+                 MatchInstance.MatchInstanceEvents.teleportBypass = true;
+                 if (matchInstance.state.equals(MatchInstance.InstancedRegionState.WAITING) && matchInstance.lobbyLocation != null)
+-                    player.teleport(matchInstance.lobbyLocation);
++                    player.teleportAsync(matchInstance.lobbyLocation);
+                 else
+-                    player.teleport(matchInstance.startLocation);
++                    player.teleportAsync(matchInstance.startLocation);
+ 
+                 //Set the lives that the player has //todo: this needs to become configurable and be expanded upon in the future
+                 matchInstance.playerLives.put(player, 3);
+@@ -91,10 +91,10 @@ public class InstancePlayerManager {
+             MatchInstance.MatchInstanceEvents.teleportBypass = true;
+             if (matchInstance instanceof DungeonInstance) {
+                 Location location = matchInstance.previousPlayerLocations.get(player);
+-                if (location != null) player.teleport(location);
+-                else player.teleport(matchInstance.exitLocation);
++                if (location != null) player.teleportAsync(location);
++                else player.teleportAsync(matchInstance.exitLocation);
+             } else
+-                player.teleport(matchInstance.exitLocation);
++                player.teleportAsync(matchInstance.exitLocation);
+         }
+ 
+         //End the match if there are no players left because they all died
+@@ -117,9 +117,9 @@ public class InstancePlayerManager {
+             matchInstance.defeat();
+             MatchInstance.MatchInstanceEvents.teleportBypass = true;
+             if (matchInstance.previousPlayerLocations.get(player) != null)
+-                player.teleport(matchInstance.previousPlayerLocations.get(player));
++                player.teleportAsync(matchInstance.previousPlayerLocations.get(player));
+             else if (matchInstance.exitLocation != null)
+-                player.teleport(matchInstance.exitLocation);
++                player.teleportAsync(matchInstance.exitLocation);
+             PlayerData.setMatchInstance(player, null);
+             matchInstance.participants.remove(player);
+             return;
+@@ -134,7 +134,7 @@ public class InstancePlayerManager {
+         player.setGameMode(GameMode.SURVIVAL);
+         matchInstance.spectators.remove(player);
+         MatchInstance.MatchInstanceEvents.teleportBypass = true;
+-        player.teleport(deathLocation.getBannerBlock().getLocation());
++        player.teleportAsync(deathLocation.getBannerBlock().getLocation());
+         PlayerData.setMatchInstance(player, matchInstance);
+     }
+ 
+@@ -149,7 +149,7 @@ public class InstancePlayerManager {
+         player.setGameMode(GameMode.SPECTATOR);
+         if (!wasPlayer) {
+             MatchInstance.MatchInstanceEvents.teleportBypass = true;
+-            player.teleport(matchInstance.startLocation);
++            player.teleportAsync(matchInstance.startLocation);
+         }
+         PlayerData.setMatchInstance(player, matchInstance);
+     }
+@@ -164,10 +164,10 @@ public class InstancePlayerManager {
+         MatchInstance.MatchInstanceEvents.teleportBypass = true;
+         if (matchInstance instanceof DungeonInstance) {
+             Location location = matchInstance.previousPlayerLocations.get(player);
+-            if (location != null) player.teleport(location);
+-            else player.teleport(matchInstance.exitLocation);
++            if (location != null) player.teleportAsync(location);
++            else player.teleportAsync(matchInstance.exitLocation);
+         } else
+-            player.teleport(matchInstance.exitLocation);
++            player.teleportAsync(matchInstance.exitLocation);
+         PlayerData.setMatchInstance(player, null);
+         matchInstance.playerLives.remove(player);
+         if (matchInstance.getDeathLocationByPlayer(player) != null)
+diff --git a/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java b/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java
+index 37e17c25..92eeaf48 100644
+--- a/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java
++++ b/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java
+@@ -159,7 +159,7 @@ public abstract class MatchInstance {
+             if (!player.isOnline()) removePlayer(player);
+             if (!isInRegion(player.getLocation())) {
+                 MatchInstanceEvents.teleportBypass = true;
+-                player.teleport(startLocation);
++                player.teleportAsync(startLocation);
+             }
+         });
+     }
+@@ -169,7 +169,7 @@ public abstract class MatchInstance {
+             if (!player.isOnline()) removeSpectator(player);
+             if (!isInRegion(player.getLocation())) {
+                 MatchInstanceEvents.teleportBypass = true;
+-                player.teleport(startLocation);
++                player.teleportAsync(startLocation);
+             }
+         });
+     }
+@@ -182,10 +182,10 @@ public abstract class MatchInstance {
+                     !player.hasPermission("elitemobs.*") &&
+                     isInRegion(player.getLocation())) {
+                 MatchInstanceEvents.teleportBypass = true;
+-                if (exitLocation != null) player.teleport(exitLocation);
++                if (exitLocation != null) player.teleportAsync(exitLocation);
+                 else if (PlayerData.getBackTeleportLocation(player) != null)
+-                    player.teleport(PlayerData.getBackTeleportLocation(player));
+-                else player.teleport(DefaultConfig.getDefaultSpawnLocation());
++                    player.teleportAsync(PlayerData.getBackTeleportLocation(player));
++                else player.teleportAsync(DefaultConfig.getDefaultSpawnLocation());
+             }
+     }
+ 
+@@ -248,7 +248,7 @@ public abstract class MatchInstance {
+         state = InstancedRegionState.ONGOING;
+         players.forEach(player -> {
+             MatchInstanceEvents.teleportBypass = true;
+-            player.teleport(startLocation);
++            player.teleportAsync(startLocation);
+         });
+         participants = (HashSet<Player>) players.clone();
+     }
+diff --git a/src/main/java/com/magmaguy/elitemobs/items/customenchantments/SoulbindEnchantment.java b/src/main/java/com/magmaguy/elitemobs/items/customenchantments/SoulbindEnchantment.java
+index d7585968..0a57d708 100644
+--- a/src/main/java/com/magmaguy/elitemobs/items/customenchantments/SoulbindEnchantment.java
++++ b/src/main/java/com/magmaguy/elitemobs/items/customenchantments/SoulbindEnchantment.java
+@@ -80,9 +80,9 @@ public class SoulbindEnchantment extends CustomEnchantment {
+                             return;
+                         }
+                         if (!lastLocation.equals(item.getLocation()))
+-                            soulboundPlayer.teleport(item.getLocation().clone().add(new Vector(0, 0.5, 0)));
++                            soulboundPlayer.teleportAsync(item.getLocation().clone().add(new Vector(0, 0.5, 0)));
+                         if (counter == 1)
+-                            soulboundPlayer.teleport(item.getLocation().clone().add(new Vector(0, 0.5, 0)));
++                            soulboundPlayer.teleportAsync(item.getLocation().clone().add(new Vector(0, 0.5, 0)));
+                     }
+                 }.runAtFixedRate(MetadataHandler.PLUGIN, 1, 1);
+             }
+diff --git a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCChatBubble.java b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCChatBubble.java
+index 59930df2..ca2def78 100644
+--- a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCChatBubble.java
++++ b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCChatBubble.java
+@@ -45,7 +45,7 @@ public class NPCChatBubble {
+                         cancel();
+                         return;
+                     }
+-                    visualArmorStand.teleport(visualArmorStand.getLocation().clone().add(new Vector(0, 0.005, 0)));
++                    visualArmorStand.teleportAsync(visualArmorStand.getLocation().clone().add(new Vector(0, 0.005, 0)));
+                     counter++;
+                 }
+             }.runAtFixedRate(MetadataHandler.PLUGIN, 1, 1);
+diff --git a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
+index 9fea044d..4b80c9b4 100644
+--- a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
++++ b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
+@@ -45,7 +45,7 @@ public class NPCProximitySensor implements Listener {
+                         if (!entity.getType().equals(EntityType.PLAYER)) continue;
+                         Player player = (Player) entity;
+                         Location rotatedLocation = npcEntity.getVillager().getLocation().setDirection(entity.getLocation().subtract(npcEntity.getVillager().getLocation()).toVector());
+-                        npcEntity.getVillager().teleport(rotatedLocation);
++                        npcEntity.getVillager().teleportAsync(rotatedLocation);
+                         if (unseenPlayerList.contains(player)) {
+                             if (!npcEntity.getNPCsConfigFields().getInteractionType().equals(NPCInteractions.NPCInteractionType.CHAT))
+                                 npcEntity.sayDialog(player);
+@@ -163,7 +163,7 @@ public class NPCProximitySensor implements Listener {
+                     visualArmorStand.setCustomName(messageDown);
+             }
+ 
+-            visualArmorStand.teleport(visualArmorStand.getLocation().clone().add(new Vector(0, up.get() ? 0.01 : -0.01, 0)));
++            visualArmorStand.teleportAsync(visualArmorStand.getLocation().clone().add(new Vector(0, up.get() ? 0.01 : -0.01, 0)));
+ 
+         }, null, 0L, 1L);
+     }
+diff --git a/src/main/java/com/magmaguy/elitemobs/pathfinding/Navigation.java b/src/main/java/com/magmaguy/elitemobs/pathfinding/Navigation.java
+index 716d7816..96426c65 100644
+--- a/src/main/java/com/magmaguy/elitemobs/pathfinding/Navigation.java
++++ b/src/main/java/com/magmaguy/elitemobs/pathfinding/Navigation.java
+@@ -85,7 +85,7 @@ public class Navigation implements Listener {
+                         !customBossEntity.exists() ||
+                         customBossEntity.getLivingEntity().getLocation().distanceSquared(destination) < Math.pow(1, 2)) {
+                     if (counter >= finalDuration && force) {
+-                        customBossEntity.getLivingEntity().teleport(destination);
++                        customBossEntity.getLivingEntity().teleportAsync(destination);
+                     }
+                     cancel();
+                     currentlyNavigating.remove(customBossEntity);
+diff --git a/src/main/java/com/magmaguy/elitemobs/powers/ArrowRain.java b/src/main/java/com/magmaguy/elitemobs/powers/ArrowRain.java
+index b31afdfd..16e43ce0 100644
+--- a/src/main/java/com/magmaguy/elitemobs/powers/ArrowRain.java
++++ b/src/main/java/com/magmaguy/elitemobs/powers/ArrowRain.java
+@@ -38,7 +38,7 @@ public class ArrowRain extends MinorPower implements Listener {
+ 
+                 if (counter > 10 * 20) {
+                     cancel();
+-                    eliteEntity.getLivingEntity().teleport(initialLocation);
++                    eliteEntity.getLivingEntity().teleportAsync(initialLocation);
+                     return;
+                 }
+ 
+diff --git a/src/main/java/com/magmaguy/elitemobs/powers/BulletHell.java b/src/main/java/com/magmaguy/elitemobs/powers/BulletHell.java
+index 3193877c..4a057b47 100644
+--- a/src/main/java/com/magmaguy/elitemobs/powers/BulletHell.java
++++ b/src/main/java/com/magmaguy/elitemobs/powers/BulletHell.java
+@@ -74,7 +74,7 @@ public class BulletHell extends BossPower implements Listener {
+     public void doBulletHell(EliteEntity eliteEntity) {
+         eliteEntity.getLivingEntity().setAI(false);
+         if (eliteEntity.getLivingEntity().getLocation().clone().add(new Vector(0, 10, 0)).getBlock().getType().equals(Material.AIR))
+-            eliteEntity.getLivingEntity().teleport(eliteEntity.getLivingEntity().getLocation().clone().add(new Vector(0, 10, 0)));
++            eliteEntity.getLivingEntity().teleportAsync(eliteEntity.getLivingEntity().getLocation().clone().add(new Vector(0, 10, 0)));
+         new FoliaRunnable(eliteEntity.getLivingEntity().getScheduler(), null) {
+             final Location initialLocation = eliteEntity.getLivingEntity().getLocation().clone();
+             int counter = 0;
+@@ -102,7 +102,7 @@ public class BulletHell extends BossPower implements Listener {
+                 if (counter > 20) {
+                     cancel();
+                     eliteEntity.getLivingEntity().setAI(true);
+-                    eliteEntity.getLivingEntity().teleport(initialLocation);
++                    eliteEntity.getLivingEntity().teleportAsync(initialLocation);
+                 }
+ 
+             }
+diff --git a/src/main/java/com/magmaguy/elitemobs/powers/FireworksBarrage.java b/src/main/java/com/magmaguy/elitemobs/powers/FireworksBarrage.java
+index 50a6ddf2..ea015713 100644
+--- a/src/main/java/com/magmaguy/elitemobs/powers/FireworksBarrage.java
++++ b/src/main/java/com/magmaguy/elitemobs/powers/FireworksBarrage.java
+@@ -33,7 +33,7 @@ public class FireworksBarrage extends BossPower {
+         eliteEntity.getLivingEntity().setAI(false);
+         if (eliteEntity.getLivingEntity().getLocation().clone().add(new Vector(0, 10, 0)).getBlock().getType().equals(Material.AIR))
+             if (!eliteEntity.getLivingEntity().getType().equals(EntityType.GHAST))
+-                eliteEntity.getLivingEntity().teleport(eliteEntity.getLivingEntity().getLocation().clone().add(new Vector(0, 10, 0)));
++                eliteEntity.getLivingEntity().teleportAsync(eliteEntity.getLivingEntity().getLocation().clone().add(new Vector(0, 10, 0)));
+         new FoliaRunnable(eliteEntity.getLivingEntity().getScheduler(), null) {
+             final Location initialLocation = eliteEntity.getLivingEntity().getLocation().clone();
+             int counter = 0;
+@@ -79,7 +79,7 @@ public class FireworksBarrage extends BossPower {
+                 if (counter > 10) {
+                     cancel();
+                     eliteEntity.getLivingEntity().setAI(true);
+-                    eliteEntity.getLivingEntity().teleport(initialLocation);
++                    eliteEntity.getLivingEntity().teleportAsync(initialLocation);
+                 }
+ 
+             }
+diff --git a/src/main/java/com/magmaguy/elitemobs/powers/MeteorShower.java b/src/main/java/com/magmaguy/elitemobs/powers/MeteorShower.java
+index 9a6853ef..8b5ada3d 100644
+--- a/src/main/java/com/magmaguy/elitemobs/powers/MeteorShower.java
++++ b/src/main/java/com/magmaguy/elitemobs/powers/MeteorShower.java
+@@ -39,7 +39,7 @@ public class MeteorShower extends BossPower implements Listener {
+                 if (counter > 10 * 20) {
+                     cancel();
+                     eliteEntity.getLivingEntity().setAI(true);
+-                    eliteEntity.getLivingEntity().teleport(initialLocation);
++                    eliteEntity.getLivingEntity().teleportAsync(initialLocation);
+                     return;
+                 }
+ 
+diff --git a/src/main/java/com/magmaguy/elitemobs/powers/ShieldWall.java b/src/main/java/com/magmaguy/elitemobs/powers/ShieldWall.java
+index 50e043e5..9a3ee91e 100644
+--- a/src/main/java/com/magmaguy/elitemobs/powers/ShieldWall.java
++++ b/src/main/java/com/magmaguy/elitemobs/powers/ShieldWall.java
+@@ -237,7 +237,7 @@ public class ShieldWall extends MinorPower {
+                     }
+ 
+                     visualShieldsLeft++;
+-                    armorStand.teleport(getRealLocation(direction, eliteEntity.getLivingEntity().getLocation(), i));
++                    armorStand.teleportAsync(getRealLocation(direction, eliteEntity.getLivingEntity().getLocation(), i));
+                 }
+             }
+             if (visualShieldsLeft == 0) {
+diff --git a/src/main/java/com/magmaguy/elitemobs/powers/SpiritWalk.java b/src/main/java/com/magmaguy/elitemobs/powers/SpiritWalk.java
+index c92e101a..7d8e7c19 100644
+--- a/src/main/java/com/magmaguy/elitemobs/powers/SpiritWalk.java
++++ b/src/main/java/com/magmaguy/elitemobs/powers/SpiritWalk.java
+@@ -57,7 +57,7 @@ public class SpiritWalk extends BossPower implements Listener {
+ 
+                 if (eliteEntity.getLivingEntity().getLocation().clone().distance(finalLocation) < 2 || counter > 20 * 10) {
+ 
+-                    eliteEntity.getLivingEntity().teleport(finalLocation);
++                    eliteEntity.getLivingEntity().teleportAsync(finalLocation);
+                     eliteEntity.getLivingEntity().setAI(true);
+                     eliteEntity.getLivingEntity().setInvulnerable(false);
+                     eliteEntity.getLivingEntity().removePotionEffect(PotionEffectType.GLOWING);
+@@ -65,7 +65,7 @@ public class SpiritWalk extends BossPower implements Listener {
+ 
+                 }
+ 
+-                eliteEntity.getLivingEntity().teleport(eliteEntity.getLivingEntity().getLocation().clone().add(toDestination.clone()));
++                eliteEntity.getLivingEntity().teleportAsync(eliteEntity.getLivingEntity().getLocation().clone().add(toDestination.clone()));
+ 
+                 counter++;
+ 
+@@ -114,8 +114,8 @@ public class SpiritWalk extends BossPower implements Listener {
+                                 eliteEntity.getLivingEntity().setInvulnerable(false);
+ 
+                                 if (vehicle != null && !vehicle.isDead())
+-                                    vehicle.teleport(finalLocation);
+-                                eliteEntity.getLivingEntity().teleport(finalLocation);
++                                    vehicle.teleportAsync(finalLocation);
++                                eliteEntity.getLivingEntity().teleportAsync(finalLocation);
+ 
+                                 if (vehicle != null && !vehicle.isDead()) {
+                                     if (vehicle instanceof LivingEntity) {
+@@ -145,9 +145,9 @@ public class SpiritWalk extends BossPower implements Listener {
+                             }
+ 
+                             if (vehicle != null && !vehicle.isDead()) {
+-                                vehicle.teleport(eliteEntity.getLivingEntity().getLocation().clone().add(toDestination.clone()));
++                                vehicle.teleportAsync(eliteEntity.getLivingEntity().getLocation().clone().add(toDestination.clone()));
+                             }
+-                            eliteEntity.getLivingEntity().teleport(eliteEntity.getLivingEntity().getLocation().clone().add(toDestination.clone()));
++                            eliteEntity.getLivingEntity().teleportAsync(eliteEntity.getLivingEntity().getLocation().clone().add(toDestination.clone()));
+ 
+                             counter++;
+ 
+diff --git a/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java b/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java
+index 99da7f53..4e5f66d4 100644
+--- a/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java
++++ b/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java
+@@ -249,7 +249,7 @@ public class ScriptAction {
+             List<Location> destinationLocations = new ArrayList<>(finalScriptTargets.getTargetLocations(scriptActionData));
+             if (destinationLocations.isEmpty()) return;
+             MatchInstance.MatchInstanceEvents.teleportBypass = true;
+-            iteratedTarget.teleport(destinationLocations.get(0));
++            iteratedTarget.teleportAsync(destinationLocations.get(0));
+         });
+     }
+ 
+diff --git a/src/main/java/com/magmaguy/elitemobs/powerstances/VisualItemProcessor.java b/src/main/java/com/magmaguy/elitemobs/powerstances/VisualItemProcessor.java
+index 8a97948e..7cbe397d 100644
+--- a/src/main/java/com/magmaguy/elitemobs/powerstances/VisualItemProcessor.java
++++ b/src/main/java/com/magmaguy/elitemobs/powerstances/VisualItemProcessor.java
+@@ -125,7 +125,7 @@ public class VisualItemProcessor {
+         Location newLocation = eliteEntity.getLivingEntity().getLocation().clone().add(new Vector(0, 1, 0)).add(vector);
+ 
+ //        if (currentLocation.distanceSquared(newLocation) > Math.pow(3, 2)) {
+-//            item.teleport(newLocation);
++//            item.teleportAsync(newLocation);
+ //            item.setVelocity(new Vector(0.01, 0.01, 0.01));
+ //            return;
+ //        }
+@@ -140,7 +140,7 @@ public class VisualItemProcessor {
+         movementVector = movementVector.multiply(0.3);
+ 
+ //        if (Math.abs(movementVector.getX()) > 3 || Math.abs(movementVector.getY()) > 3 || Math.abs(movementVector.getZ()) > 3) {
+-//            item.teleport(newLocation);
++//            item.teleportAsync(newLocation);
+ //        } else {
+         item.setVelocity(movementVector);
+ //        }
+diff --git a/src/main/java/com/magmaguy/elitemobs/utils/DialogArmorStand.java b/src/main/java/com/magmaguy/elitemobs/utils/DialogArmorStand.java
+index 078eb5f6..cec97c38 100644
+--- a/src/main/java/com/magmaguy/elitemobs/utils/DialogArmorStand.java
++++ b/src/main/java/com/magmaguy/elitemobs/utils/DialogArmorStand.java
+@@ -30,7 +30,7 @@ public class DialogArmorStand {
+                     cancel();
+                     return;
+                 }
+-                armorStand.teleport(sourceEntity.getLocation().clone().add(finalOffset).add(new Vector(0, taskTimer * 0.05, 0)));
++                armorStand.teleportAsync(sourceEntity.getLocation().clone().add(finalOffset).add(new Vector(0, taskTimer * 0.05, 0)));
+             }
+ 
+         }.runAtFixedRate(MetadataHandler.PLUGIN, 1, 2);
+@@ -61,7 +61,7 @@ public class DialogArmorStand {
+                     cancel();
+                     return;
+                 }
+-                armorStand.teleport(sourceEntity.getLocation().clone().add(getDisplacementVector(sourceEntity)));
++                armorStand.teleportAsync(sourceEntity.getLocation().clone().add(getDisplacementVector(sourceEntity)));
+                 taskTimer++;
+             }
+         }.runAtFixedRate(MetadataHandler.PLUGIN, 1, 1);
+diff --git a/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java b/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java
+index 6b69fa57..8b72c787 100644
+--- a/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java
++++ b/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java
+@@ -109,7 +109,7 @@ public class WormholeTask {
+         player.getScheduler().run(MetadataHandler.PLUGIN, (scheduledTask) -> {
+             if (wormholeEntry.getWormhole().getWormholeConfigFields().isBlindPlayer())
+                 player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 2, 0));
+-            player.teleport(destination);
++            player.teleportAsync(destination);
+             player.playSound(player.getLocation(), Sound.BLOCK_RESPAWN_ANCHOR_CHARGE, 1f, 1f);
+             player.setVelocity(destination.getDirection().normalize());
+             player.setFlying(false);
+-- 
+2.45.1.windows.1
+

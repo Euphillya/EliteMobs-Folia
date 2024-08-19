@@ -1,0 +1,217 @@
+From 65bdbdb33d6dbf5e551c1456533b6bffc78ba05b Mon Sep 17 00:00:00 2001
+From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
+Date: Mon, 19 Aug 2024 14:21:44 +0200
+Subject: [PATCH 6/9] Fix RandomSpawning
+
+---
+ .../elitemobs/mobconstructor/CustomSpawn.java | 100 ++++++++++++------
+ 1 file changed, 70 insertions(+), 30 deletions(-)
+
+diff --git a/src/main/java/com/magmaguy/elitemobs/mobconstructor/CustomSpawn.java b/src/main/java/com/magmaguy/elitemobs/mobconstructor/CustomSpawn.java
+index 88871c7d..b93a2811 100644
+--- a/src/main/java/com/magmaguy/elitemobs/mobconstructor/CustomSpawn.java
++++ b/src/main/java/com/magmaguy/elitemobs/mobconstructor/CustomSpawn.java
+@@ -29,6 +29,7 @@ import org.bukkit.util.Vector;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Objects;
++import java.util.concurrent.CompletableFuture;
+ import java.util.concurrent.ThreadLocalRandom;
+ import java.util.concurrent.TimeUnit;
+ 
+@@ -129,6 +130,8 @@ public class CustomSpawn {
+                     cancel();
+                     return;
+                 }
++
++                Bukkit.getRegionScheduler().execute(MetadataHandler.PLUGIN, spawnLocation, () -> {
+                 //One last check
+                 //Last line of defense - spawn a test mob. If some unknown protection system prevents spawning it should prevent this
+                 LivingEntity testEntity = spawnLocation.getWorld().spawn(spawnLocation, Zombie.class);
+@@ -159,7 +162,7 @@ public class CustomSpawn {
+ 
+                 if (timedEvent != null)
+                     timedEvent.queueEvent();
+-
++                });
+             }
+         }.runAtFixedRate(MetadataHandler.PLUGIN, 1, 1);
+     }
+@@ -180,7 +183,7 @@ public class CustomSpawn {
+                 return;
+             tries++;
+             allTries++;
+-            this.spawnLocation = generateRandomSpawnLocation();
++            this.spawnLocation = generateRandomSpawnLocation().join();
+             if (spawnLocation != null)
+                 break;
+         }
+@@ -204,7 +207,8 @@ public class CustomSpawn {
+         }
+     }
+ 
+-    public Location generateRandomSpawnLocation() {
++    public CompletableFuture<Location> generateRandomSpawnLocation() {
++        CompletableFuture<Location> locationFuture = new CompletableFuture<Location>();
+         if (customSpawnConfigFields == null) {
+             Logger.warn("Something tried to spawn but has invalid custom spawn config fields! This isn't good.", true);
+             Logger.warn("Bosses: ");
+@@ -217,7 +221,8 @@ public class CustomSpawn {
+                 Logger.warn("Event: " + timedEvent.getCustomEventsConfigFields().getFilename());
+                 timedEvent.end();
+             }
+-            return null;
++            locationFuture.complete(null);
++            return locationFuture;
+         }
+ 
+         //If there are no players online, don't spawn anything - this condition shouldn't be reachable in the first place
+@@ -225,7 +230,8 @@ public class CustomSpawn {
+             keepTrying = false;
+             if (timedEvent != null)
+                 timedEvent.end();
+-            return null;
++            locationFuture.complete(null);
++            return locationFuture;
+         }
+ 
+         //Go through online players and select the ones in valid worlds
+@@ -253,8 +259,10 @@ public class CustomSpawn {
+             validPlayers.addAll(world.getPlayers());
+ 
+         //If there are no players in valid worlds, skip
+-        if (validPlayers.isEmpty())
+-            return null;
++        if (validPlayers.isEmpty()) {
++            locationFuture.complete(null);
++            return locationFuture;
++        }
+ 
+         //Select a random player
+         Player selectedPlayer = validPlayers.get(ThreadLocalRandom.current().nextInt(validPlayers.size()));
+@@ -271,13 +279,18 @@ public class CustomSpawn {
+             randomizedVector.setY(randomizedVector.getY() * -1);
+ 
+         //Temp location - do not run checks on it yet
+-        Location location = selectedPlayer.getLocation().clone().add(randomizedVector);
++        Location randomizeLocation = selectedPlayer.getLocation().clone().add(randomizedVector);
++        Bukkit.getRegionScheduler().execute(MetadataHandler.PLUGIN, randomizeLocation, () -> {
++            Location location = randomizeLocation;
++
+         //This doesn't matter too much since it will be parsed later, also these values are already tweaked for 1.18.
+         location.setY(ThreadLocalRandom.current().nextInt(-0, 256));
+         World world = location.getWorld();
+ 
+-        if (!customSpawnConfigFields.getValidBiomes().isEmpty() && !customSpawnConfigFields.getValidBiomes().contains(location.getBlock().getBiome()))
+-            return null;
++        if (!customSpawnConfigFields.getValidBiomes().isEmpty() && !customSpawnConfigFields.getValidBiomes().contains(location.getBlock().getBiome())) {
++            locationFuture.complete(null);
++            return;
++        }
+ 
+         //Set Y level - Location isn't final yet
+         if (customSpawnConfigFields.isSurfaceSpawn())
+@@ -291,8 +304,14 @@ public class CustomSpawn {
+                 for (int y = (int) location.getY(); y > -64; y--) {
+                     Location tempLocation = location.clone();
+                     tempLocation.setY(y);
+-                    if (location.getBlock().getType().equals(Material.VOID_AIR)) return null;
+-                    if (y < customSpawnConfigFields.getLowestYLevel()) return null;
++                    if (location.getBlock().getType().equals(Material.VOID_AIR)){
++                        locationFuture.complete(null);
++                        return;
++                    }
++                    if (y < customSpawnConfigFields.getLowestYLevel()){
++                        locationFuture.complete(null);
++                        return;
++                    }
+                     Block groundBlock = location.clone().subtract(new Vector(0, 1, 0)).getBlock();
+                     if (!groundBlock.getType().isSolid()) continue;
+                     //Check temp location block
+@@ -306,8 +325,14 @@ public class CustomSpawn {
+                 for (int y = (int) location.getY(); y < highestBlockYAt; y++) {
+                     Location tempLocation = location.clone();
+                     tempLocation.setY(y);
+-                    if (location.getBlock().getType().equals(Material.VOID_AIR)) return null;
+-                    if (y < customSpawnConfigFields.getLowestYLevel()) return null;
++                    if (location.getBlock().getType().equals(Material.VOID_AIR)){
++                        locationFuture.complete(null);
++                        return;
++                    }
++                    if (y < customSpawnConfigFields.getLowestYLevel()){
++                        locationFuture.complete(null);
++                        return;
++                    }
+                     Block groundBlock = location.clone().subtract(new Vector(0, 1, 0)).getBlock();
+                     if (!groundBlock.getType().isSolid()) continue;
+                     //Check temp location block
+@@ -325,35 +350,50 @@ public class CustomSpawn {
+         //Prevent spawning right on top of players
+         assert world != null;
+         for (Player player : world.getPlayers())
+-            if (player.getLocation().distanceSquared(location) < Math.pow(24, 2))
+-                return null;
++            if (player.getLocation().distanceSquared(location) < Math.pow(24, 2)) {
++                locationFuture.complete(null);
++                return;
++            }
+ 
+         //Nether ceiling check
+-        if (location.getY() > 127 && world.getEnvironment().equals(World.Environment.NETHER))
+-            return null;
++        if (location.getY() > 127 && world.getEnvironment().equals(World.Environment.NETHER)){
++            locationFuture.complete(null);
++            return;
++        }
+ 
+         //Custom height check
+-        if (location.getY() == -100 || location.getY() > customSpawnConfigFields.getHighestYLevel() || location.getY() < customSpawnConfigFields.getLowestYLevel())
+-            return null;
+-
++        if (location.getY() == -100 || location.getY() > customSpawnConfigFields.getHighestYLevel() || location.getY() < customSpawnConfigFields.getLowestYLevel()){
++            locationFuture.complete(null);
++            return;
++        }
+         //Check WorldGuard flags
+         if (EliteMobs.worldGuardIsEnabled) {
+-            if (!WorldGuardFlagChecker.doEventFlag(location))
+-                return null;
++            if (!WorldGuardFlagChecker.doEventFlag(location)){
++                locationFuture.complete(null);
++                return;
++            }
+ 
+-            if (!WorldGuardFlagChecker.doEliteMobsSpawnFlag(location))
+-                return null;
++            if (!WorldGuardFlagChecker.doEliteMobsSpawnFlag(location)){
++                locationFuture.complete(null);
++                return;
++            }
+ 
+-            if (!WorldGuardFlagChecker.doMobSpawnFlag(location))
+-                return null;
++            if (!WorldGuardFlagChecker.doMobSpawnFlag(location)){
++                locationFuture.complete(null);
++                return;
++            }
+         }
+ 
+         //Light level check - following 1.18 rules
+         if (!customSpawnConfigFields.isCanSpawnInLight())
+-            if (location.getBlock().getLightLevel() > 8)
+-                return null;
++            if (location.getBlock().getLightLevel() > 8){
++                locationFuture.complete(null);
++                return;
++            }
+ 
+-        return location;
++        locationFuture.complete(location);
++        });
++        return locationFuture;
+     }
+ 
+ }
+-- 
+2.45.1.windows.1
+
