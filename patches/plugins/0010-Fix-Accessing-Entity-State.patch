@@ -1,0 +1,34 @@
+From e9bfe538bb7ebf8ebb7b7b4314d1d87eab0a3f34 Mon Sep 17 00:00:00 2001
+From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
+Date: Wed, 21 Aug 2024 22:29:54 +0200
+Subject: [PATCH 10/10] Fix Accessing Entity State
+
+---
+ .../com/magmaguy/elitemobs/mobconstructor/EliteEntity.java | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java b/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
+index a8e97743..9e91c4c0 100644
+--- a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
++++ b/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
+@@ -655,13 +655,14 @@ public class EliteEntity {
+         //This prevents the entity tracker from running this code twice when removing due to specific reasons
+         //Custom bosses have their own tracking removal rules
+         if (livingEntity != null && (!(this instanceof CustomBossEntity)))
+-            EntityTracker.getEliteMobEntities().remove(eliteUUID);
++            livingEntity.getScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> EntityTracker.getEliteMobEntities().remove(eliteUUID), null);
+         if (livingEntity != null && !removalReason.equals(RemovalReason.DEATH))
+-            livingEntity.remove();
++            livingEntity.getScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> livingEntity.remove(), null);
+         if (livingEntity instanceof EnderDragon enderDragon && removalReason.equals(RemovalReason.DEATH)) {
++            enderDragon.getScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> {
+             enderDragon.setPhase(EnderDragon.Phase.DYING);
+             if (enderDragon.getDragonBattle() != null)
+-                enderDragon.getDragonBattle().generateEndPortal(false);
++                enderDragon.getDragonBattle().generateEndPortal(false);}, null);
+         }
+         this.livingEntity = null;
+     }
+-- 
+2.45.1.windows.1
+

@@ -1,7 +1,7 @@
 From 6521d49de92572e143f6a320f00d4c222b39ae26 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
 Date: Mon, 19 Aug 2024 14:21:42 +0200
-Subject: [PATCH 1/9] Fix Upstream 168
+Subject: [PATCH 01/10] Fix Upstream 168
 
 ---
  .../com/magmaguy/elitemobs/commands/SpawnBossLevelCommand.java  | 2 +-
