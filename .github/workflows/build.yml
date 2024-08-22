@@ -37,6 +37,7 @@ jobs:
     - name: Execute Gradle build
       run: |
         cd EliteMobs-Patchs
+        bash -c "chmod +x gradlew"
         ./gradlew shadowJar --stacktrace
 
 
