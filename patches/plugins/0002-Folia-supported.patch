@@ -1,17 +1,17 @@
-From ad31a6e6f5ca1dc4a896ebaf52d754cdf8decf34 Mon Sep 17 00:00:00 2001
+From 52a4bc7a961072733466067b43e558e367b8dca7 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Thu, 22 Aug 2024 11:34:22 +0200
-Subject: [PATCH 04/11] Folia supported
+Date: Thu, 22 Aug 2024 23:37:09 +0200
+Subject: [PATCH 2/9] Folia supported
 
 ---
  src/main/resources/plugin.yml | 1 +
  1 file changed, 1 insertion(+)
 
 diff --git a/src/main/resources/plugin.yml b/src/main/resources/plugin.yml
-index 214631d4..7b98d04f 100644
+index dd8e5eda..bce7d1dd 100644
 --- a/src/main/resources/plugin.yml
 +++ b/src/main/resources/plugin.yml
-@@ -3,6 +3,7 @@ version: 9.1.3
+@@ -3,6 +3,7 @@ version: 9.1.4
  author: MagmaGuy
  main: com.magmaguy.elitemobs.EliteMobs
  api-version: 1.14

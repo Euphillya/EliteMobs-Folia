@@ -1,7 +1,7 @@
-From e8ec817413271e98bac57b0e991cd1f4d0279a25 Mon Sep 17 00:00:00 2001
+From c3cbcdd3997f00217da08590c0b4b7cc3b4c561e Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Thu, 22 Aug 2024 11:34:22 +0200
-Subject: [PATCH 06/11] Replace all schedulers
+Date: Thu, 22 Aug 2024 23:37:10 +0200
+Subject: [PATCH 4/9] Replace all schedulers
 
 ---
  .../java/com/magmaguy/elitemobs/CrashFix.java | 31 +++++++-----
@@ -25,7 +25,7 @@ Subject: [PATCH 06/11] Replace all schedulers
  .../instanced/InstanceDeathLocation.java      |  6 ++-
  .../instanced/InstancePlayerManager.java      |  6 ++-
  .../elitemobs/instanced/MatchInstance.java    | 21 +++++++--
- .../instanced/arena/ArenaInstance.java        | 13 +++--
+ .../instanced/arena/ArenaInstance.java        | 10 ++--
  .../instanced/dungeons/DungeonInstance.java   | 35 ++++++++------
  .../dungeons/EnchantmentDungeonInstance.java  | 10 ++--
  .../elitemobs/items/ItemLootShower.java       | 21 +++++----
@@ -111,7 +111,7 @@ Subject: [PATCH 06/11] Replace all schedulers
  .../powers/meta/CustomSummonPower.java        |  8 ++--
  .../elitemobs/powers/meta/ElitePower.java     | 18 +++----
  .../elitemobs/powers/meta/PowerCooldown.java  |  5 +-
- .../powers/scripts/ScriptAction.java          | 37 ++++++++-------
+ .../powers/scripts/ScriptAction.java          | 36 +++++++-------
  .../elitemobs/powers/scripts/ScriptZone.java  |  6 ++-
  .../EnderCrystalLightningRod.java             |  5 +-
  .../powerstances/VisualItemProcessor.java     |  9 ++--
@@ -131,8 +131,8 @@ Subject: [PATCH 06/11] Replace all schedulers
  .../utils/shapes/TranslatingRay.java          |  6 ++-
  .../versionnotifier/VersionChecker.java       | 11 +++--
  .../elitemobs/wormhole/WormholeEntry.java     |  3 +-
- .../elitemobs/wormhole/WormholeTask.java      | 19 ++++----
- 128 files changed, 703 insertions(+), 526 deletions(-)
+ .../elitemobs/wormhole/WormholeTask.java      | 16 +++----
+ 128 files changed, 697 insertions(+), 525 deletions(-)
 
 diff --git a/src/main/java/com/magmaguy/elitemobs/CrashFix.java b/src/main/java/com/magmaguy/elitemobs/CrashFix.java
 index 978d7bb9..1ee4ec22 100644
@@ -862,18 +862,10 @@ index a888875c..37e17c25 100644
  
          @Override
 diff --git a/src/main/java/com/magmaguy/elitemobs/instanced/arena/ArenaInstance.java b/src/main/java/com/magmaguy/elitemobs/instanced/arena/ArenaInstance.java
-index 467f217c..49cdb11e 100644
+index d489b4bb..639f8a52 100644
 --- a/src/main/java/com/magmaguy/elitemobs/instanced/arena/ArenaInstance.java
 +++ b/src/main/java/com/magmaguy/elitemobs/instanced/arena/ArenaInstance.java
-@@ -14,6 +14,7 @@ import com.magmaguy.elitemobs.playerdata.database.PlayerData;
- import com.magmaguy.elitemobs.thirdparty.mythicmobs.MythicMobsInterface;
- import com.magmaguy.elitemobs.utils.ConfigurationLocation;
- import com.magmaguy.elitemobs.utils.EventCaller;
-+import com.magmaguy.elitemobs.utils.FoliaRunnable;
- import com.magmaguy.elitemobs.utils.shapes.Cylinder;
- import com.magmaguy.magmacore.util.ChatColorConverter;
- import com.magmaguy.magmacore.util.Logger;
-@@ -195,7 +196,7 @@ public class ArenaInstance extends MatchInstance {
+@@ -199,7 +199,7 @@ public class ArenaInstance extends MatchInstance {
              victory();
              return;
          }
@@ -882,22 +874,21 @@ index 467f217c..49cdb11e 100644
              if (arenaState == ArenaState.IDLE) return;
              String title = ArenasConfig.getWaveTitle();
              String subtitle = ArenasConfig.getWaveSubtitle();
-@@ -214,7 +215,7 @@ public class ArenaInstance extends MatchInstance {
- 
+@@ -217,7 +217,7 @@ public class ArenaInstance extends MatchInstance {
+     }
  
      private void arenaWatchdog() {
 -        new BukkitRunnable() {
-+        new FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
++        new com.magmaguy.elitemobs.utils.FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
              @Override
              public void run() {
                  if (arenaState != ArenaState.ACTIVE) return;
-@@ -222,9 +223,11 @@ public class ArenaInstance extends MatchInstance {
+@@ -225,9 +225,11 @@ public class ArenaInstance extends MatchInstance {
                      if (!customBossEntity.exists()) removeBoss(customBossEntity);
                  if (!nonEliteMobsEntities.isEmpty())
                      for (Entity entity : (HashSet<Entity>) nonEliteMobsEntities.clone())
--                        if (!entity.isValid()) removeBoss(entity);
 +                        entity.getScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> {
-+                            if (!entity.isValid()) removeBoss(entity);
+                         if (!entity.isValid()) removeBoss(entity);
 +                        }, null);
              }
 -        }.runTaskTimer(MetadataHandler.PLUGIN, 0L, 20L);
@@ -905,7 +896,7 @@ index 467f217c..49cdb11e 100644
      }
  
      public void removeBoss(CustomBossEntity customBossEntity) {
-@@ -301,7 +304,7 @@ public class ArenaInstance extends MatchInstance {
+@@ -322,7 +324,7 @@ public class ArenaInstance extends MatchInstance {
          } else
              participants.forEach(player -> player.sendTitle(ArenasConfig.getDefeatTitle().replace("$wave", currentWave + ""), ArenasConfig.getDefeatSubtitle().replace("$wave", currentWave + ""), 20, 20 * 10, 20));
  
@@ -1107,7 +1098,7 @@ index ec4b511e..c9b2c0eb 100644
  
      @Override
 diff --git a/src/main/java/com/magmaguy/elitemobs/items/ItemLootShower.java b/src/main/java/com/magmaguy/elitemobs/items/ItemLootShower.java
-index 4fbd06cf..9240fd9a 100644
+index 71782f7d..a0c38842 100644
 --- a/src/main/java/com/magmaguy/elitemobs/items/ItemLootShower.java
 +++ b/src/main/java/com/magmaguy/elitemobs/items/ItemLootShower.java
 @@ -8,6 +8,7 @@ import com.magmaguy.elitemobs.economy.EconomyHandler;
@@ -1118,7 +1109,7 @@ index 4fbd06cf..9240fd9a 100644
  import com.magmaguy.magmacore.util.ChatColorConverter;
  import com.magmaguy.magmacore.util.ItemStackGenerator;
  import com.magmaguy.magmacore.util.Logger;
-@@ -52,7 +53,7 @@ public class ItemLootShower implements Listener {
+@@ -53,7 +54,7 @@ public class ItemLootShower implements Listener {
  
          if (Math.abs(mobLevel - ElitePlayerInventory.playerInventories.get(player.getUniqueId()).getFullPlayerTier(false))
                  > ItemSettingsConfig.getLootLevelDifferenceLockout()) {
@@ -1127,7 +1118,7 @@ index 4fbd06cf..9240fd9a 100644
                  int counter = 0;
  
                  @Override
-@@ -67,7 +68,7 @@ public class ItemLootShower implements Listener {
+@@ -68,7 +69,7 @@ public class ItemLootShower implements Listener {
                                      .replace("$playerLevel", ElitePlayerInventory.playerInventories.get(player.getUniqueId()).getFullPlayerTier(false) + "")
                                      .replace("$bossLevel", (int) mobLevel + "")));
                  }
@@ -1136,7 +1127,7 @@ index 4fbd06cf..9240fd9a 100644
              return;
          }
          if (ItemSettingsConfig.isPutLootDirectlyIntoPlayerInventory())
-@@ -84,7 +85,7 @@ public class ItemLootShower implements Listener {
+@@ -85,7 +86,7 @@ public class ItemLootShower implements Listener {
      private static void sendCurrencyNotification(Player player) {
          if (playerCurrencyPickup.containsKey(player)) return;
  
@@ -1145,7 +1136,7 @@ index 4fbd06cf..9240fd9a 100644
              double oldAmount = 0;
  
              @Override
-@@ -111,7 +112,7 @@ public class ItemLootShower implements Listener {
+@@ -112,7 +113,7 @@ public class ItemLootShower implements Listener {
  
              }
  
@@ -1154,7 +1145,7 @@ index 4fbd06cf..9240fd9a 100644
  
      }
  
-@@ -121,7 +122,7 @@ public class ItemLootShower implements Listener {
+@@ -122,7 +123,7 @@ public class ItemLootShower implements Listener {
      }
  
      private void addIndirectly(Location location, int currencyAmount2) {
@@ -1163,7 +1154,7 @@ index 4fbd06cf..9240fd9a 100644
              int currencyAmount = currencyAmount2;
  
              @Override
-@@ -183,7 +184,7 @@ public class ItemLootShower implements Listener {
+@@ -184,7 +185,7 @@ public class ItemLootShower implements Listener {
                      currencyAmount--;
                  }
              }
@@ -1172,7 +1163,7 @@ index 4fbd06cf..9240fd9a 100644
      }
  
      private int getCurrencyAmount(double eliteMobTier) {
-@@ -398,7 +399,7 @@ public class ItemLootShower implements Listener {
+@@ -399,7 +400,7 @@ public class ItemLootShower implements Listener {
              coinValues.put(item.getUniqueId(), this);
              pickupable = false;
              item.setGravity(false);
@@ -1181,7 +1172,7 @@ index 4fbd06cf..9240fd9a 100644
                  @Override
                  public void run() {
                      if (coinValues.containsKey(item.getUniqueId())) {
-@@ -407,9 +408,9 @@ public class ItemLootShower implements Listener {
+@@ -408,9 +409,9 @@ public class ItemLootShower implements Listener {
                          coinValues.remove(item.getUniqueId());
                      }
                  }
@@ -1193,7 +1184,7 @@ index 4fbd06cf..9240fd9a 100644
                  int counter = 0;
  
                  @Override
-@@ -451,7 +452,7 @@ public class ItemLootShower implements Listener {
+@@ -452,7 +453,7 @@ public class ItemLootShower implements Listener {
  
                      counter++;
                  }
@@ -5056,23 +5047,15 @@ index 661b9fbf..9cb303bd 100644
      }
  
 diff --git a/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java b/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java
-index dea4169e..99da7f53 100644
+index 7fca4400..b510568a 100644
 --- a/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java
 +++ b/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java
-@@ -13,6 +13,7 @@ import com.magmaguy.elitemobs.playerdata.ElitePlayerInventory;
- import com.magmaguy.elitemobs.powers.meta.CustomSummonPower;
- import com.magmaguy.elitemobs.powers.scripts.caching.ScriptActionBlueprint;
- import com.magmaguy.elitemobs.powers.scripts.enums.ActionType;
-+import com.magmaguy.elitemobs.utils.FoliaRunnable;
- import com.magmaguy.magmacore.util.ChatColorConverter;
- import com.magmaguy.magmacore.util.Logger;
- import lombok.Getter;
-@@ -127,19 +128,19 @@ public class ScriptAction {
-         scriptTargets.cacheTargets(scriptActionData);
+@@ -129,19 +129,19 @@ public class ScriptAction {
+             finalScriptTargets.cacheTargets(scriptActionData);
          if (blueprint.getWait() > 0) {
              //First wait for allotted amount of time
 -            new BukkitRunnable() {
-+            new FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
++            new com.magmaguy.elitemobs.utils.FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
                  @Override
                  public void run() {
                      runScriptTask(scriptActionData);
@@ -5086,11 +5069,11 @@ index dea4169e..99da7f53 100644
          if (blueprint.getRepeatEvery() > 0)
              //if it's a repeating task, run task repeatedly
 -            new BukkitRunnable() {
-+            new FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
++            new com.magmaguy.elitemobs.utils.FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
                  int counter = 0;
  
                  @Override
-@@ -166,7 +167,7 @@ public class ScriptAction {
+@@ -168,7 +168,7 @@ public class ScriptAction {
                      //Otherwise, run the condition
                      runActions(scriptActionData);
                  }
@@ -5099,7 +5082,7 @@ index dea4169e..99da7f53 100644
          else {
              //Check for blocking conditions
              if (blueprint.getConditionsBlueprint() != null &&
-@@ -298,7 +299,7 @@ public class ScriptAction {
+@@ -315,7 +315,7 @@ public class ScriptAction {
              }
              bossBar.addPlayer((Player) iteratedTarget);
              if (blueprint.getDuration() > 0)
@@ -5108,7 +5091,7 @@ index dea4169e..99da7f53 100644
          });
      }
  
-@@ -422,7 +423,7 @@ public class ScriptAction {
+@@ -439,7 +439,7 @@ public class ScriptAction {
          getTargets(scriptActionData).forEach(targetEntity -> {
              targetEntity.setAI(blueprint.getBValue());
              if (blueprint.getDuration() > 0)
@@ -5117,7 +5100,7 @@ index dea4169e..99da7f53 100644
          });
      }
  
-@@ -431,7 +432,7 @@ public class ScriptAction {
+@@ -448,7 +448,7 @@ public class ScriptAction {
          getTargets(scriptActionData).forEach(targetEntity -> {
              ((Mob) targetEntity).setAware(blueprint.getBValue());
              if (blueprint.getDuration() > 0)
@@ -5126,16 +5109,16 @@ index dea4169e..99da7f53 100644
          });
  
      }
-@@ -444,7 +445,7 @@ public class ScriptAction {
+@@ -461,7 +461,7 @@ public class ScriptAction {
      private void runPush(ScriptActionData scriptActionData) {
          //When players get hit that resets their velocity (by Minecraft) and since this runs before the damage is applied
          //any velocity set here would be cancelled if used in a damage event. To bypass it we just run it a tick later.
 -        new BukkitRunnable() {
-+        new FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
++        new com.magmaguy.elitemobs.utils.FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
              @Override
              public void run() {
                  getTargets(scriptActionData).forEach(targetEntity -> {
-@@ -461,7 +462,7 @@ public class ScriptAction {
+@@ -478,7 +478,7 @@ public class ScriptAction {
                      }
                  });
              }
@@ -5144,7 +5127,7 @@ index dea4169e..99da7f53 100644
      }
  
      private void runSummonReinforcement(ScriptActionData scriptActionData) {
-@@ -540,7 +541,7 @@ public class ScriptAction {
+@@ -557,7 +557,7 @@ public class ScriptAction {
                      invulnerablePlayers.remove(player);
              }
              if (blueprint.getDuration() > 0)
@@ -5153,7 +5136,7 @@ index dea4169e..99da7f53 100644
          });
      }
  
-@@ -553,9 +554,9 @@ public class ScriptAction {
+@@ -570,9 +570,9 @@ public class ScriptAction {
                  ElitePlayerInventory.getPlayer(player).addTags(blueprint.getTags());
              if (blueprint.getDuration() > 0) {
                  if (bossEntity != null)
@@ -5165,7 +5148,7 @@ index dea4169e..99da7f53 100644
              }
          });
      }
-@@ -569,9 +570,9 @@ public class ScriptAction {
+@@ -586,9 +586,9 @@ public class ScriptAction {
                  ElitePlayerInventory.getPlayer(player).removeTags(blueprint.getTags());
              if (blueprint.getDuration() > 0) {
                  if (bossEntity != null)
@@ -5177,16 +5160,16 @@ index dea4169e..99da7f53 100644
              }
          });
      }
-@@ -664,7 +665,7 @@ public class ScriptAction {
+@@ -681,7 +681,7 @@ public class ScriptAction {
  
              if (!blueprint.getLandingScripts().isEmpty()) {
                  FallingEntityDataPair fallingEntityDataPair = new FallingEntityDataPair(this, scriptActionData);
 -                new BukkitRunnable() {
-+                new FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
++                new com.magmaguy.elitemobs.utils.FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
                      int counter = 0;
  
                      @Override
-@@ -678,7 +679,7 @@ public class ScriptAction {
+@@ -695,7 +695,7 @@ public class ScriptAction {
                          if (counter > 20 * 60 * 5)
                              cancel();
                      }
@@ -5195,12 +5178,12 @@ index dea4169e..99da7f53 100644
              }
          });
      }
-@@ -703,12 +704,12 @@ public class ScriptAction {
+@@ -720,12 +720,12 @@ public class ScriptAction {
          getTargets(scriptActionData).forEach(targetEntity -> {
              targetEntity.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(blueprint.getScale());
              if (blueprint.getDuration() > 0)
 -                new BukkitRunnable() {
-+                new FoliaRunnable(targetEntity.getScheduler(), null) {
++                new com.magmaguy.elitemobs.utils.FoliaRunnable(targetEntity.getScheduler(), null) {
                      @Override
                      public void run() {
                          targetEntity.getAttribute(Attribute.GENERIC_SCALE).setBaseValue(1f);
@@ -5887,34 +5870,18 @@ index 3399255e..2718a5c6 100644
      @Setter
      private ArmorStand text = null;
 diff --git a/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java b/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java
-index 54403879..6b69fa57 100644
+index 26fb6bb9..82ee467a 100644
 --- a/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java
 +++ b/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java
-@@ -6,7 +6,9 @@ import com.magmaguy.elitemobs.config.WormholesConfig;
- import com.magmaguy.elitemobs.economy.EconomyHandler;
- import com.magmaguy.elitemobs.quests.playercooldowns.PlayerQuestCooldowns;
- import com.magmaguy.elitemobs.utils.ChunkLocationChecker;
-+import com.magmaguy.elitemobs.utils.FoliaRunnable;
- import com.magmaguy.magmacore.util.ChatColorConverter;
-+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
- import org.bukkit.Bukkit;
- import org.bukkit.Location;
- import org.bukkit.Particle;
-@@ -20,26 +22,27 @@ import org.bukkit.util.Vector;
- 
- import java.util.HashSet;
- import java.util.Objects;
-+import java.util.concurrent.TimeUnit;
- 
- public class WormholeTask {
+@@ -25,21 +25,21 @@ public class WormholeTask {
      private WormholeTask() {
      }
  
 -    public static BukkitTask startWormholeTask(WormholeEntry wormholeEntry) {
-+    public static ScheduledTask startWormholeTask(WormholeEntry wormholeEntry) {
++    public static io.papermc.paper.threadedregions.scheduler.ScheduledTask startWormholeTask(WormholeEntry wormholeEntry) {
          HashSet<Player> teleportingPlayers = new HashSet<>();
 -        return new BukkitRunnable() {
-+        return new FoliaRunnable(Bukkit.getAsyncScheduler(), TimeUnit.MILLISECONDS) {
++        return new com.magmaguy.elitemobs.utils.FoliaRunnable(Bukkit.getAsyncScheduler(), java.util.concurrent.TimeUnit.MILLISECONDS) {
              int counter = 0;
  
              @Override
@@ -5922,7 +5889,7 @@ index 54403879..6b69fa57 100644
                  if (!ChunkLocationChecker.locationIsLoaded(wormholeEntry.getLocation())) {
                      if (wormholeEntry.getText() != null)
 -                        new BukkitRunnable() {
-+                        new FoliaRunnable(wormholeEntry.getText().getScheduler(), null) {
++                        new com.magmaguy.elitemobs.utils.FoliaRunnable(wormholeEntry.getText().getScheduler(), null) {
                              @Override
                              public void run() {
                                  wormholeEntry.getText().remove();
@@ -5932,16 +5899,16 @@ index 54403879..6b69fa57 100644
                      cancel();
                      return;
                  }
-@@ -61,7 +64,7 @@ public class WormholeTask {
+@@ -61,7 +61,7 @@ public class WormholeTask {
                      counter++;
                  }
              }
 -        }.runTaskTimerAsynchronously(MetadataHandler.PLUGIN, 0, 5);
-+        }.runAtFixedRate(MetadataHandler.PLUGIN, 1, 5 * 50);
++        }.runAtFixedRate(MetadataHandler.PLUGIN, 1*50, 5*50);
  
      }
  
-@@ -103,7 +106,7 @@ public class WormholeTask {
+@@ -103,7 +103,7 @@ public class WormholeTask {
              }
              return;
          }
@@ -5950,11 +5917,11 @@ index 54403879..6b69fa57 100644
              if (wormholeEntry.getWormhole().getWormholeConfigFields().isBlindPlayer())
                  player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 2, 0));
              player.teleport(destination);
-@@ -111,8 +114,8 @@ public class WormholeTask {
+@@ -111,8 +111,8 @@ public class WormholeTask {
              player.setVelocity(destination.getDirection().normalize());
              player.setFlying(false);
              Wormhole.getPlayerCooldowns().add(player);
--            Bukkit.getScheduler().scheduleSyncDelayedTask(MetadataHandler.PLUGIN, () -> Wormhole.getPlayerCooldowns().remove(player), 20 * 10L);
+-            Bukkit.getScheduler().scheduleSyncDelayedTask(MetadataHandler.PLUGIN, () -> Wormhole.getPlayerCooldowns().remove(player), 20 * 5L);
 -        });
 +            player.getScheduler().runDelayed(MetadataHandler.PLUGIN, (scheduledTask1) -> Wormhole.getPlayerCooldowns().remove(player),  null, 20 * 10L);
 +        }, null);

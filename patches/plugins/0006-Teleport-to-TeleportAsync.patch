@@ -1,7 +1,7 @@
-From 42f9161e9cf0fac4ae2035ffd893224b05a8510d Mon Sep 17 00:00:00 2001
+From 10695937fe2ee47ce1e4cef37dd35527e1cc50c8 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Thu, 22 Aug 2024 11:34:23 +0200
-Subject: [PATCH 08/11] Teleport to TeleportAsync
+Date: Thu, 22 Aug 2024 23:37:11 +0200
+Subject: [PATCH 6/9] Teleport to TeleportAsync
 
 ---
  .../elitemobs/api/PlayerTeleportEvent.java    |  2 +-
@@ -413,11 +413,11 @@ index c92e101a..7d8e7c19 100644
                              counter++;
  
 diff --git a/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java b/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java
-index 99da7f53..4e5f66d4 100644
+index b510568a..6a430965 100644
 --- a/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java
 +++ b/src/main/java/com/magmaguy/elitemobs/powers/scripts/ScriptAction.java
-@@ -249,7 +249,7 @@ public class ScriptAction {
-             List<Location> destinationLocations = new ArrayList<>(finalScriptTargets.getTargetLocations(scriptActionData));
+@@ -265,7 +265,7 @@ public class ScriptAction {
+             List<Location> destinationLocations = getFinalLocationTargets(scriptActionData).stream().toList();
              if (destinationLocations.isEmpty()) return;
              MatchInstance.MatchInstanceEvents.teleportBypass = true;
 -            iteratedTarget.teleport(destinationLocations.get(0));
@@ -470,10 +470,10 @@ index 078eb5f6..cec97c38 100644
              }
          }.runAtFixedRate(MetadataHandler.PLUGIN, 1, 1);
 diff --git a/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java b/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java
-index 6b69fa57..8b72c787 100644
+index 82ee467a..394174ab 100644
 --- a/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java
 +++ b/src/main/java/com/magmaguy/elitemobs/wormhole/WormholeTask.java
-@@ -109,7 +109,7 @@ public class WormholeTask {
+@@ -106,7 +106,7 @@ public class WormholeTask {
          player.getScheduler().run(MetadataHandler.PLUGIN, (scheduledTask) -> {
              if (wormholeEntry.getWormhole().getWormholeConfigFields().isBlindPlayer())
                  player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 2, 0));
