@@ -10,10 +10,6 @@ Before starting, make sure you have the following tools installed on your system
 - Bash (if you are on Windows, you can use Git Bash or WSL)
 - Java Development Kit 21 (JDK) to compile the plugin
 
-## Download
-
-You can download the plugins here: https://github.com/Euphillya/EliteMobs-Folia/actions
-
 ## Installation
 
 ### Cloning the Repository
