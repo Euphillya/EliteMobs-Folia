@@ -1,7 +1,7 @@
-From a8d09b957c5be14f297082ae4211869b673d9a3b Mon Sep 17 00:00:00 2001
+From 89d5ac8126f9f8e96f7bf043063ee14bbf9ccf3f Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Mon, 19 Aug 2024 14:21:44 +0200
-Subject: [PATCH 08/10] Add EliteEntity EntityScheduler
+Date: Thu, 22 Aug 2024 11:34:23 +0200
+Subject: [PATCH 09/11] Add EliteEntity EntityScheduler
 
 ---
  .../com/magmaguy/elitemobs/mobconstructor/EliteEntity.java | 7 +++++++
