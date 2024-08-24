@@ -1,7 +1,7 @@
-From d0bc17d5c5e7524a2f8d4c411b17f0136f5a7645 Mon Sep 17 00:00:00 2001
+From 8e0a4ddacc66726d6ced6bb95f512851622fa06a Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Sat, 24 Aug 2024 18:28:30 +0200
-Subject: [PATCH 04/12] Replace all schedulers
+Date: Sat, 24 Aug 2024 21:24:32 +0200
+Subject: [PATCH 04/10] Replace all schedulers
 
 ---
  .../java/com/magmaguy/elitemobs/CrashFix.java | 31 +++++++-----

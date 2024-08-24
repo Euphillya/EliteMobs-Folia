@@ -1,7 +1,7 @@
-From 8990bb6a7946f73cf9a98afa128b3c2cc4487468 Mon Sep 17 00:00:00 2001
+From 1b35d14803175f6f9af7b11c1f4dde6ec88d1bc8 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Sat, 24 Aug 2024 18:28:31 +0200
-Subject: [PATCH 09/12] Fix Accessing Entity State
+Date: Sat, 24 Aug 2024 21:24:33 +0200
+Subject: [PATCH 09/10] Fix Accessing Entity State
 
 ---
  .../com/magmaguy/elitemobs/mobconstructor/EliteEntity.java | 7 ++++---
