@@ -1,7 +1,7 @@
-From c3cbcdd3997f00217da08590c0b4b7cc3b4c561e Mon Sep 17 00:00:00 2001
+From d0bc17d5c5e7524a2f8d4c411b17f0136f5a7645 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Thu, 22 Aug 2024 23:37:10 +0200
-Subject: [PATCH 4/9] Replace all schedulers
+Date: Sat, 24 Aug 2024 18:28:30 +0200
+Subject: [PATCH 04/11] Replace all schedulers
 
 ---
  .../java/com/magmaguy/elitemobs/CrashFix.java | 31 +++++++-----
@@ -2445,7 +2445,7 @@ index 937ac223..f3772c0c 100644
  
      private void cancelLeash() {
 diff --git a/src/main/java/com/magmaguy/elitemobs/npcs/NPCEntity.java b/src/main/java/com/magmaguy/elitemobs/npcs/NPCEntity.java
-index 0b800b5a..d44263d6 100644
+index 480d7af1..c0773e0e 100644
 --- a/src/main/java/com/magmaguy/elitemobs/npcs/NPCEntity.java
 +++ b/src/main/java/com/magmaguy/elitemobs/npcs/NPCEntity.java
 @@ -16,6 +16,7 @@ import com.magmaguy.elitemobs.thirdparty.libsdisguises.DisguiseEntity;

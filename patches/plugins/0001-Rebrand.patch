@@ -1,14 +1,14 @@
-From 70efbc2591cbc5dd02688cf8d187a41dd2503f45 Mon Sep 17 00:00:00 2001
+From b18f2707bcdd916a9f93b98e14f724c84e595d46 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Thu, 22 Aug 2024 23:37:09 +0200
-Subject: [PATCH 1/9] Rebrand
+Date: Sat, 24 Aug 2024 18:28:16 +0200
+Subject: [PATCH 01/11] Rebrand
 
 ---
  build.gradle | 9 +++++----
  1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/build.gradle b/build.gradle
-index 781206eb..85517a4b 100644
+index 6cb29695..1ba15911 100644
 --- a/build.gradle
 +++ b/build.gradle
 @@ -12,7 +12,7 @@ compileTestJava.options.encoding = "UTF-8"

@@ -1,7 +1,7 @@
-From 4c306aa00c740a70af700777abfc773fa4ca8038 Mon Sep 17 00:00:00 2001
+From e8088c4142a7f1c8966a81bc1d2647177deaa92f Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Thu, 22 Aug 2024 23:37:11 +0200
-Subject: [PATCH 8/9] Fix spawn mobs
+Date: Sat, 24 Aug 2024 18:28:31 +0200
+Subject: [PATCH 08/11] Fix spawn mobs
 
 ---
  .../mobconstructor/custombosses/CustomBossEntity.java         | 4 ++--
