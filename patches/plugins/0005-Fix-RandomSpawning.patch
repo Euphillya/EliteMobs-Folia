@@ -1,7 +1,7 @@
 From 4411bfdbef6465d2ecb7ddd08db6bd3b2804465c Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
 Date: Sat, 24 Aug 2024 18:28:30 +0200
-Subject: [PATCH 05/11] Fix RandomSpawning
+Subject: [PATCH 05/12] Fix RandomSpawning
 
 ---
  .../elitemobs/mobconstructor/CustomSpawn.java | 100 ++++++++++++------

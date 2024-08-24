@@ -1,7 +1,7 @@
 From b18f2707bcdd916a9f93b98e14f724c84e595d46 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
 Date: Sat, 24 Aug 2024 18:28:16 +0200
-Subject: [PATCH 01/11] Rebrand
+Subject: [PATCH 01/12] Rebrand
 
 ---
  build.gradle | 9 +++++----

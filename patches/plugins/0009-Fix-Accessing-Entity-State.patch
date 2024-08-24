@@ -1,7 +1,7 @@
 From 8990bb6a7946f73cf9a98afa128b3c2cc4487468 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
 Date: Sat, 24 Aug 2024 18:28:31 +0200
-Subject: [PATCH 09/11] Fix Accessing Entity State
+Subject: [PATCH 09/12] Fix Accessing Entity State
 
 ---
  .../com/magmaguy/elitemobs/mobconstructor/EliteEntity.java | 7 ++++---
@@ -29,54 +29,6 @@ index a8e97743..9e91c4c0 100644
          }
          this.livingEntity = null;
      }
-diff --git a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
-index 4b80c9b4..e7bd5012 100644
---- a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
-+++ b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
-@@ -38,8 +38,8 @@ public class NPCProximitySensor implements Listener {
-             @Override
-             public void run() {
-                 HashSet<Player> unseenPlayerList = (HashSet<Player>) nearbyPlayers.clone();
--                for (NPCEntity npcEntity : EntityTracker.getNpcEntities().values()) {
--                    if (!npcEntity.isValid()) continue;
-+                for (NPCEntity npcEntity : EntityTracker.getNpcEntities().values()) { npcEntity.getVillager().getScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> {
-+                    if (!npcEntity.isValid()) return;
-                     for (Entity entity : npcEntity.getVillager().getNearbyEntities(npcEntity.getNPCsConfigFields().getActivationRadius(),
-                             npcEntity.getNPCsConfigFields().getActivationRadius(), npcEntity.getNPCsConfigFields().getActivationRadius())) {
-                         if (!entity.getType().equals(EntityType.PLAYER)) continue;
-@@ -55,7 +55,7 @@ public class NPCProximitySensor implements Listener {
-                             nearbyPlayers.add(player);
-                             startQuestIndicator(npcEntity, player);
-                         }
--                    }
-+                    }}, null);
-                 }
- 
-                 nearbyPlayers.removeIf(unseenPlayerList::contains);
-diff --git a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
-index e7bd5012..d831da9d 100644
---- a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
-+++ b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
-@@ -41,8 +41,8 @@ public class NPCProximitySensor implements Listener {
-                 for (NPCEntity npcEntity : EntityTracker.getNpcEntities().values()) { npcEntity.getVillager().getScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> {
-                     if (!npcEntity.isValid()) return;
-                     for (Entity entity : npcEntity.getVillager().getNearbyEntities(npcEntity.getNPCsConfigFields().getActivationRadius(),
--                            npcEntity.getNPCsConfigFields().getActivationRadius(), npcEntity.getNPCsConfigFields().getActivationRadius())) {
--                        if (!entity.getType().equals(EntityType.PLAYER)) continue;
-+                            npcEntity.getNPCsConfigFields().getActivationRadius(), npcEntity.getNPCsConfigFields().getActivationRadius())) { entity.getScheduler().run(MetadataHandler.PLUGIN, scheduledTask1 -> {
-+                        if (!entity.getType().equals(EntityType.PLAYER)) return;
-                         Player player = (Player) entity;
-                         Location rotatedLocation = npcEntity.getVillager().getLocation().setDirection(entity.getLocation().subtract(npcEntity.getVillager().getLocation()).toVector());
-                         npcEntity.getVillager().teleportAsync(rotatedLocation);
-@@ -55,7 +55,7 @@ public class NPCProximitySensor implements Listener {
-                             nearbyPlayers.add(player);
-                             startQuestIndicator(npcEntity, player);
-                         }
--                    }}, null);
-+                    }, null);}}, null);
-                 }
- 
-                 nearbyPlayers.removeIf(unseenPlayerList::contains);
 -- 
 2.45.1.windows.1
 
