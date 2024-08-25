@@ -1,12 +1,45 @@
-From c3a5f811d16001048571c82a98efd22fd2b54c2d Mon Sep 17 00:00:00 2001
+From 566c66e6cf0fbefb53a85238bae3cae13b000a8f Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Sun, 25 Aug 2024 09:32:04 +0200
+Date: Sun, 25 Aug 2024 11:47:31 +0200
 Subject: [PATCH 09/10] Fix Accessing Entity State
 
 ---
- .../com/magmaguy/elitemobs/mobconstructor/EliteEntity.java | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ .../elitemobs/entitytracker/EntityTracker.java      | 13 ++++++++-----
+ .../elitemobs/mobconstructor/EliteEntity.java       |  7 ++++---
+ .../elitemobs/npcs/chatter/NPCProximitySensor.java  | 10 +++++-----
+ 3 files changed, 17 insertions(+), 13 deletions(-)
 
+diff --git a/src/main/java/com/magmaguy/elitemobs/entitytracker/EntityTracker.java b/src/main/java/com/magmaguy/elitemobs/entitytracker/EntityTracker.java
+index c619b440..a25eb24f 100644
+--- a/src/main/java/com/magmaguy/elitemobs/entitytracker/EntityTracker.java
++++ b/src/main/java/com/magmaguy/elitemobs/entitytracker/EntityTracker.java
+@@ -178,18 +178,21 @@ public class EntityTracker implements Listener {
+ 
+     public static void wipeShutdown() {
+         for (EliteEntity eliteEntity : ((HashMap<UUID, EliteEntity>) eliteMobEntities.clone()).values())
+-            eliteEntity.remove(RemovalReason.SHUTDOWN);
++            eliteEntity.getEntityScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> eliteEntity.remove(RemovalReason.SHUTDOWN), null);
+         getEliteMobEntities().clear();
+         for (NPCEntity npcEntity : ((HashMap<UUID, NPCEntity>) npcEntities.clone()).values())
+-            npcEntity.remove(RemovalReason.SHUTDOWN);
++            npcEntity.getVillager().getScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> npcEntity.remove(RemovalReason.SHUTDOWN), null);
+         getNpcEntities().clear();
+         for (Block block : temporaryBlocks)
+-            block.setType(Material.AIR);
++            Bukkit.getRegionScheduler().execute(MetadataHandler.PLUGIN, block.getLocation(), () -> block.setType(Material.AIR));
+         temporaryBlocks.clear();
+         //Necessary for things such as visual effects which are not stored in memory, only tagged
+         for (World world : Bukkit.getWorlds())
+-            for (Entity entity : world.getEntities())
+-                unregister(entity, RemovalReason.SHUTDOWN);
++            for (Chunk chunk : world.getLoadedChunks())
++                Bukkit.getRegionScheduler().execute(MetadataHandler.PLUGIN, chunk.getWorld(), chunk.getX(), chunk.getZ(), () -> {
++                    for (Entity entity : chunk.getEntities())
++                        entity.getScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> unregister(entity, RemovalReason.SHUTDOWN), null);
++                });
+         CustomBossEntity.getTrackableCustomBosses().clear();
+         CrashFix.knownSessionChunks.clear();
+     }
 diff --git a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java b/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
 index a8e97743..9e91c4c0 100644
 --- a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
@@ -29,6 +62,35 @@ index a8e97743..9e91c4c0 100644
          }
          this.livingEntity = null;
      }
+diff --git a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
+index 4b80c9b4..d831da9d 100644
+--- a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
++++ b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
+@@ -38,11 +38,11 @@ public class NPCProximitySensor implements Listener {
+             @Override
+             public void run() {
+                 HashSet<Player> unseenPlayerList = (HashSet<Player>) nearbyPlayers.clone();
+-                for (NPCEntity npcEntity : EntityTracker.getNpcEntities().values()) {
+-                    if (!npcEntity.isValid()) continue;
++                for (NPCEntity npcEntity : EntityTracker.getNpcEntities().values()) { npcEntity.getVillager().getScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> {
++                    if (!npcEntity.isValid()) return;
+                     for (Entity entity : npcEntity.getVillager().getNearbyEntities(npcEntity.getNPCsConfigFields().getActivationRadius(),
+-                            npcEntity.getNPCsConfigFields().getActivationRadius(), npcEntity.getNPCsConfigFields().getActivationRadius())) {
+-                        if (!entity.getType().equals(EntityType.PLAYER)) continue;
++                            npcEntity.getNPCsConfigFields().getActivationRadius(), npcEntity.getNPCsConfigFields().getActivationRadius())) { entity.getScheduler().run(MetadataHandler.PLUGIN, scheduledTask1 -> {
++                        if (!entity.getType().equals(EntityType.PLAYER)) return;
+                         Player player = (Player) entity;
+                         Location rotatedLocation = npcEntity.getVillager().getLocation().setDirection(entity.getLocation().subtract(npcEntity.getVillager().getLocation()).toVector());
+                         npcEntity.getVillager().teleportAsync(rotatedLocation);
+@@ -55,7 +55,7 @@ public class NPCProximitySensor implements Listener {
+                             nearbyPlayers.add(player);
+                             startQuestIndicator(npcEntity, player);
+                         }
+-                    }
++                    }, null);}}, null);
+                 }
+ 
+                 nearbyPlayers.removeIf(unseenPlayerList::contains);
 -- 
 2.45.1.windows.1
 
