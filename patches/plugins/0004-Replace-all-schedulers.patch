@@ -1,7 +1,7 @@
-From 76944d777082d05d0114c3dd340c20d887931af2 Mon Sep 17 00:00:00 2001
+From a6721f5124e249ef1a67fedfef97c147a944cf65 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Sun, 25 Aug 2024 11:47:29 +0200
-Subject: [PATCH 04/10] Replace all schedulers
+Date: Tue, 27 Aug 2024 09:17:17 +0200
+Subject: [PATCH 4/8] Replace all schedulers
 
 ---
  .../java/com/magmaguy/elitemobs/CrashFix.java | 31 +++++++-----
@@ -49,7 +49,7 @@ Subject: [PATCH 04/10] Replace all schedulers
  .../elitemobs/mobconstructor/EliteEntity.java | 17 +++----
  .../PersistentObjectHandler.java              |  2 +-
  .../custombosses/CustomBossBossBar.java       |  8 ++--
- .../custombosses/CustomBossEntity.java        | 14 +++---
+ .../custombosses/CustomBossEntity.java        | 12 ++---
  .../CustomBossEscapeMechanism.java            | 11 +++--
  .../custombosses/CustomBossMount.java         |  5 +-
  .../custombosses/CustomBossTrail.java         | 18 +++----
@@ -132,7 +132,7 @@ Subject: [PATCH 04/10] Replace all schedulers
  .../versionnotifier/VersionChecker.java       | 11 +++--
  .../elitemobs/wormhole/WormholeEntry.java     |  3 +-
  .../elitemobs/wormhole/WormholeTask.java      | 16 +++----
- 128 files changed, 697 insertions(+), 525 deletions(-)
+ 128 files changed, 695 insertions(+), 525 deletions(-)
 
 diff --git a/src/main/java/com/magmaguy/elitemobs/CrashFix.java b/src/main/java/com/magmaguy/elitemobs/CrashFix.java
 index 978d7bb9..1ee4ec22 100644
@@ -1924,7 +1924,7 @@ index 2fcb4547..88871c7d 100644
                  customBossEntities.forEach((customBossEntity -> {
                      if (customBossEntity.summoningEntity != null)
 diff --git a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java b/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
-index bb4e7e56..12e16270 100644
+index 05b1297f..77c3cec3 100644
 --- a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
 +++ b/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
 @@ -21,6 +21,7 @@ import com.magmaguy.elitemobs.powerstances.MajorPowerPowerStance;
@@ -2046,66 +2046,55 @@ index 51655d24..dcb2144a 100644
  
      private void createBossBar(Player player) {
 diff --git a/src/main/java/com/magmaguy/elitemobs/mobconstructor/custombosses/CustomBossEntity.java b/src/main/java/com/magmaguy/elitemobs/mobconstructor/custombosses/CustomBossEntity.java
-index b2d479fd..22c03760 100644
+index ecc48c5d..e7871398 100644
 --- a/src/main/java/com/magmaguy/elitemobs/mobconstructor/custombosses/CustomBossEntity.java
 +++ b/src/main/java/com/magmaguy/elitemobs/mobconstructor/custombosses/CustomBossEntity.java
-@@ -26,8 +26,10 @@ import com.magmaguy.elitemobs.thirdparty.libsdisguises.DisguiseEntity;
- import com.magmaguy.elitemobs.utils.ChunkLocationChecker;
- import com.magmaguy.elitemobs.utils.CommandRunner;
- import com.magmaguy.elitemobs.utils.EventCaller;
-+import com.magmaguy.elitemobs.utils.FoliaRunnable;
- import com.magmaguy.magmacore.util.ChatColorConverter;
- import com.magmaguy.magmacore.util.Logger;
-+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
- import lombok.Getter;
- import lombok.Setter;
- import org.bukkit.Bukkit;
-@@ -53,7 +55,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
+@@ -51,7 +51,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
  
      @Getter
      protected static HashSet<CustomBossEntity> trackableCustomBosses = new HashSet<>();
 -    private final List<BukkitTask> globalReinforcements = new ArrayList<>();
-+    private final List<ScheduledTask> globalReinforcements = new ArrayList<>();
++    private final List<io.papermc.paper.threadedregions.scheduler.ScheduledTask> globalReinforcements = new ArrayList<>();
      @Getter
      protected CustomBossesConfigFields customBossesConfigFields;
      protected CustomBossEntity customBossMount = null;
-@@ -65,7 +67,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
+@@ -63,7 +63,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
      protected CustomBossTrail customBossTrail;
      @Getter
      protected CustomBossBossBar customBossBossBar;
 -    protected Integer escapeMechanism;
-+    protected ScheduledTask escapeMechanism;
++    protected io.papermc.paper.threadedregions.scheduler.ScheduledTask escapeMechanism;
      @Getter
      protected PhaseBossEntity phaseBossEntity = null;
      protected String worldName;
-@@ -102,7 +104,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
-     @Getter
-     @Setter
-     private boolean dynamicLevel = false;
--    private BukkitTask dynamicLevelUpdater = null;
-+    private ScheduledTask dynamicLevelUpdater = null;
+@@ -362,7 +362,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
+         if (customBossesConfigFields.getAnnouncementPriority() < 3) return;
+         new DiscordSRVAnnouncement(ChatColorConverter.convert(customBossesConfigFields.getSpawnMessage()));
+     }
+-    private static BukkitTask dynamicLevelUpdater = null;
++    private static io.papermc.paper.threadedregions.scheduler.ScheduledTask dynamicLevelUpdater = null;
  
-     /**
-      * Uses a builder pattern in order to construct a CustomBossEntity at an arbitrary point in the future. Does not
-@@ -388,7 +390,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
-     private void updateDynamicLevel() {
-         if (dynamicLevelUpdater != null) return;
-         CustomBossEntity customBossEntity = this;
+     public static void addToUpdatingDynamicLevels(CustomBossEntity customBossEntity){
+         if (!customBossEntity.dynamicLevel) return;
+@@ -370,7 +370,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
+     }
+ 
+     public static void startUpdatingDynamicLevels(){
 -        dynamicLevelUpdater = new BukkitRunnable() {
-+        dynamicLevelUpdater = new FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
++        dynamicLevelUpdater = new com.magmaguy.elitemobs.utils.FoliaRunnable(Bukkit.getGlobalRegionScheduler()) {
              @Override
              public void run() {
-                 if (customBossEntity.isInCombat()) return;
-@@ -410,7 +412,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
-                 CustomBossMegaConsumer.setName(getLivingEntity(), customBossEntity, level);
- 
+                 Iterator<CustomBossEntity> iterator = dynamicLevelBossEntities.iterator();
+@@ -394,7 +394,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
+                     CustomBossMegaConsumer.setName(customBossEntity.getLivingEntity(), customBossEntity, customBossEntity.level);
+                 }
              }
 -        }.runTaskTimer(MetadataHandler.PLUGIN, 20 * 5L, 20 * 5L);
 +        }.runAtFixedRate(MetadataHandler.PLUGIN, 20 * 5L, 20 * 5L);
      }
  
-     private void startBossTrails() {
-@@ -518,7 +520,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
+     public static void shutdown(){
+@@ -532,7 +532,7 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
              if (!(this instanceof RegionalBossEntity) || this instanceof InstancedBossEntity)
                  EntityTracker.getEliteMobEntities().remove(super.eliteUUID);
              new EventCaller(new EliteMobRemoveEvent(this, removalReason));

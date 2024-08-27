@@ -1,14 +1,15 @@
-From be6e951a289d5267fc1b5a90fffbbbb03d1555a8 Mon Sep 17 00:00:00 2001
+From ff6a2f4fa4401f8a3857e47813d288fd226bd2e0 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Sun, 25 Aug 2024 11:47:28 +0200
-Subject: [PATCH 01/10] Rebrand
+Date: Tue, 27 Aug 2024 09:17:16 +0200
+Subject: [PATCH 1/8] Rebrand
 
 ---
- build.gradle | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ build.gradle                                             | 9 +++++----
+ .../magmaguy/elitemobs/mobconstructor/EliteEntity.java   | 5 +++++
+ 2 files changed, 10 insertions(+), 4 deletions(-)
 
 diff --git a/build.gradle b/build.gradle
-index aeb01c42..172d3de0 100644
+index da02e056..2b58779a 100644
 --- a/build.gradle
 +++ b/build.gradle
 @@ -12,7 +12,7 @@ compileTestJava.options.encoding = "UTF-8"
@@ -44,6 +45,20 @@ index aeb01c42..172d3de0 100644
      //WorldGuard API
      compileOnly group: 'com.sk89q.worldguard', name: 'worldguard-bukkit', version: '7.0.7'
      //Vault
+diff --git a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java b/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
+index bb4e7e56..05b1297f 100644
+--- a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
++++ b/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
+@@ -696,4 +696,9 @@ public class EliteEntity {
+         customMetadata.removeAll(tags);
+     }
+ 
++
++    public io.papermc.paper.threadedregions.scheduler.EntityScheduler getEntityScheduler() {
++        if (livingEntity == null) return null;
++        return livingEntity.getScheduler();
++    }
+ }
 -- 
 2.45.1.windows.1
 

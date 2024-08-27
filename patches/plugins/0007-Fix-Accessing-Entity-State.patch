@@ -1,13 +1,14 @@
-From 566c66e6cf0fbefb53a85238bae3cae13b000a8f Mon Sep 17 00:00:00 2001
+From 6122ef7aff9a3fefff01f48a77fe09f143496a41 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Sun, 25 Aug 2024 11:47:31 +0200
-Subject: [PATCH 09/10] Fix Accessing Entity State
+Date: Tue, 27 Aug 2024 09:17:18 +0200
+Subject: [PATCH 7/8] Fix Accessing Entity State
 
 ---
  .../elitemobs/entitytracker/EntityTracker.java      | 13 ++++++++-----
  .../elitemobs/mobconstructor/EliteEntity.java       |  7 ++++---
+ .../custombosses/CustomBossEntity.java              |  8 ++++----
  .../elitemobs/npcs/chatter/NPCProximitySensor.java  | 10 +++++-----
- 3 files changed, 17 insertions(+), 13 deletions(-)
+ 4 files changed, 21 insertions(+), 17 deletions(-)
 
 diff --git a/src/main/java/com/magmaguy/elitemobs/entitytracker/EntityTracker.java b/src/main/java/com/magmaguy/elitemobs/entitytracker/EntityTracker.java
 index c619b440..a25eb24f 100644
@@ -41,10 +42,10 @@ index c619b440..a25eb24f 100644
          CrashFix.knownSessionChunks.clear();
      }
 diff --git a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java b/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
-index a8e97743..9e91c4c0 100644
+index 77c3cec3..fc5696ec 100644
 --- a/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
 +++ b/src/main/java/com/magmaguy/elitemobs/mobconstructor/EliteEntity.java
-@@ -655,13 +655,14 @@ public class EliteEntity {
+@@ -653,13 +653,14 @@ public class EliteEntity {
          //This prevents the entity tracker from running this code twice when removing due to specific reasons
          //Custom bosses have their own tracking removal rules
          if (livingEntity != null && (!(this instanceof CustomBossEntity)))
@@ -61,6 +62,39 @@ index a8e97743..9e91c4c0 100644
 +                enderDragon.getDragonBattle().generateEndPortal(false);}, null);
          }
          this.livingEntity = null;
+     }
+diff --git a/src/main/java/com/magmaguy/elitemobs/mobconstructor/custombosses/CustomBossEntity.java b/src/main/java/com/magmaguy/elitemobs/mobconstructor/custombosses/CustomBossEntity.java
+index e7871398..9349ee63 100644
+--- a/src/main/java/com/magmaguy/elitemobs/mobconstructor/custombosses/CustomBossEntity.java
++++ b/src/main/java/com/magmaguy/elitemobs/mobconstructor/custombosses/CustomBossEntity.java
+@@ -375,24 +375,24 @@ public class CustomBossEntity extends EliteEntity implements Listener, Persisten
+             public void run() {
+                 Iterator<CustomBossEntity> iterator = dynamicLevelBossEntities.iterator();
+                 while (iterator.hasNext()) {
+-                    CustomBossEntity customBossEntity = iterator.next();
++                    CustomBossEntity customBossEntity = iterator.next(); customBossEntity.getEntityScheduler().run(MetadataHandler.PLUGIN, scheduledTask -> {
+                     if (!customBossEntity.isValid()) {
+                         iterator.remove(); // Remove from the list instead of canceling
+-                        continue; // Skip to the next iteration
++                        return; // Skip to the next iteration
+                     }
+                     int currentLevel = customBossEntity.getLevel();
+                     customBossEntity.getDynamicLevel(customBossEntity.getLocation());
+                     int newLevel = customBossEntity.getLevel();
+ 
+                     if (currentLevel == newLevel) {
+-                        continue; // Skip to the next iteration if the level hasn't changed
++                        return; // Skip to the next iteration if the level hasn't changed
+                     }
+ 
+                     // In theory, the damage should update automatically; the only thing that needs updating should be the health
+                     customBossEntity.setMaxHealth();
+                     customBossEntity.setNormalizedHealth();
+                     CustomBossMegaConsumer.setName(customBossEntity.getLivingEntity(), customBossEntity, customBossEntity.level);
+-                }
++                }, null);}
+             }
+         }.runAtFixedRate(MetadataHandler.PLUGIN, 20 * 5L, 20 * 5L);
      }
 diff --git a/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java b/src/main/java/com/magmaguy/elitemobs/npcs/chatter/NPCProximitySensor.java
 index 4b80c9b4..d831da9d 100644

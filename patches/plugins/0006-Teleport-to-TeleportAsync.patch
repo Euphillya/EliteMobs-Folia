@@ -1,7 +1,7 @@
-From 099cc7eb1eb5adcb659890416b2f29bc53ea3c3a Mon Sep 17 00:00:00 2001
+From 1642dab543efe77b2404902ddb40699130afff1b Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Sun, 25 Aug 2024 11:47:30 +0200
-Subject: [PATCH 06/10] Teleport to TeleportAsync
+Date: Tue, 27 Aug 2024 09:17:18 +0200
+Subject: [PATCH 6/8] Teleport to TeleportAsync
 
 ---
  .../elitemobs/api/PlayerTeleportEvent.java    |  2 +-
