@@ -1,6 +1,6 @@
-From a6721f5124e249ef1a67fedfef97c147a944cf65 Mon Sep 17 00:00:00 2001
+From 8349f17cd79d124199a80643294d279a3ba5fb22 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Tue, 27 Aug 2024 09:17:17 +0200
+Date: Mon, 2 Sep 2024 12:19:24 +0200
 Subject: [PATCH 4/8] Replace all schedulers
 
 ---
@@ -24,7 +24,7 @@ Subject: [PATCH 4/8] Replace all schedulers
  .../initialsetup/FirstTimeSetup.java          |  5 +-
  .../instanced/InstanceDeathLocation.java      |  6 ++-
  .../instanced/InstancePlayerManager.java      |  6 ++-
- .../elitemobs/instanced/MatchInstance.java    | 21 +++++++--
+ .../elitemobs/instanced/MatchInstance.java    | 23 ++++++---
  .../instanced/arena/ArenaInstance.java        | 10 ++--
  .../instanced/dungeons/DungeonInstance.java   | 35 ++++++++------
  .../dungeons/EnchantmentDungeonInstance.java  | 10 ++--
@@ -132,7 +132,7 @@ Subject: [PATCH 4/8] Replace all schedulers
  .../versionnotifier/VersionChecker.java       | 11 +++--
  .../elitemobs/wormhole/WormholeEntry.java     |  3 +-
  .../elitemobs/wormhole/WormholeTask.java      | 16 +++----
- 128 files changed, 695 insertions(+), 525 deletions(-)
+ 128 files changed, 696 insertions(+), 526 deletions(-)
 
 diff --git a/src/main/java/com/magmaguy/elitemobs/CrashFix.java b/src/main/java/com/magmaguy/elitemobs/CrashFix.java
 index 978d7bb9..1ee4ec22 100644
@@ -787,7 +787,7 @@ index ac8ea6c4..8012707a 100644
          return true;
      }
 diff --git a/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java b/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java
-index a888875c..37e17c25 100644
+index a888875c..af28d56e 100644
 --- a/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java
 +++ b/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java
 @@ -9,7 +9,9 @@ import com.magmaguy.elitemobs.api.instanced.MatchLeaveEvent;
@@ -826,7 +826,7 @@ index a888875c..37e17c25 100644
      }
  
      private void playerWatchdog() {
-@@ -187,7 +190,7 @@ public abstract class MatchInstance {
+@@ -187,17 +190,21 @@ public abstract class MatchInstance {
      }
  
      private void instanceMessages() {
@@ -834,8 +834,11 @@ index a888875c..37e17c25 100644
 +        Bukkit.getGlobalRegionScheduler().runAtFixedRate(MetadataHandler.PLUGIN, (scheduledTask) -> {
              if (state == InstancedRegionState.WAITING)
                  announce(ArenasConfig.getArenaStartHintMessage().replace("$count", minPlayers + ""));
-         }, 0L, 20 * 60L);
-@@ -197,7 +200,11 @@ public abstract class MatchInstance {
+-        }, 0L, 20 * 60L);
++        }, 1L, 20 * 60L);
+     }
+ 
+     protected void announce(String message) {
          participants.forEach(player -> player.sendMessage(ChatColorConverter.convert(message)));
      }
  

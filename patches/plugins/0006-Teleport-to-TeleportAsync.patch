@@ -1,6 +1,6 @@
-From 1642dab543efe77b2404902ddb40699130afff1b Mon Sep 17 00:00:00 2001
+From 3df8ebca11e9e38e1b71f3028e28d35d7c7e7b24 Mon Sep 17 00:00:00 2001
 From: Euphyllia Bierque <bierque.euphyllia@gmail.com>
-Date: Tue, 27 Aug 2024 09:17:18 +0200
+Date: Mon, 2 Sep 2024 12:19:25 +0200
 Subject: [PATCH 6/8] Teleport to TeleportAsync
 
 ---
@@ -176,7 +176,7 @@ index 8012707a..06dfee67 100644
          matchInstance.playerLives.remove(player);
          if (matchInstance.getDeathLocationByPlayer(player) != null)
 diff --git a/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java b/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java
-index 37e17c25..92eeaf48 100644
+index af28d56e..44585a32 100644
 --- a/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java
 +++ b/src/main/java/com/magmaguy/elitemobs/instanced/MatchInstance.java
 @@ -159,7 +159,7 @@ public abstract class MatchInstance {
