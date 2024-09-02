@@ -56,6 +56,8 @@ To apply existing patches to the `EliteMobs-Patchs` directory:
 ./script.sh applyPatches
 ```
 
+This command will apply each patch found in `patches/plugins` and create a commit for each applied patch.
+
 ### Compile
 
 If the patch application went well, simply open your IDE (preferably IntelliJ) in the EliteMobs-Patches folder and then run:
@@ -67,8 +69,6 @@ gradle shadowJar
 The jar file can be found in `./testbed/plugins/`.
 
 Then, just place it in your Minecraft server.
-
-This command will apply each patch found in `patches/plugins` and create a commit for each applied patch.
 
 ## Directory Structure
 
